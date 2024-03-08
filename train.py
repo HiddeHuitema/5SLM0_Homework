@@ -102,7 +102,7 @@ def main(args):
         # print("Epoch {}/{}, Loss = {:6f}".format(epoch,args.epochs,running_loss/len(trainloader)))
         wandb.log({'loss': epoch_loss, 'val_loss': validation_loss})
 
-    # torch.save(model,'fifth_model.pt')
+    torch.save(model,'snellius_model.pt')
 
 
 if __name__ == "__main__":
