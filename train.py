@@ -22,7 +22,7 @@ def get_arg_parser():
     parser = ArgumentParser()
     parser.add_argument("--data_path", type=str, default="./Datasets/CityScapes", help="Path to the data")
     parser.add_argument("--epochs",type = int, default = 10, help = "Amount of epochs for training")
-    parser.add_argument("--batch_size",type = int, default = 64, help = "Batch size for training")
+    parser.add_argument("--batch_size",type = int, default = 32, help = "Batch size for training")
     parser.add_argument("--resizing_factor" ,type = int, default = 1, help = "Resizing factor for the size of the images, makes training on cpu faster for testing purposes")
     """add more arguments here and change the default values to your needs in the run_container.sh file"""
     return parser
