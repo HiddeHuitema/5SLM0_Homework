@@ -5,7 +5,7 @@ avoid any global variables.
 import torch
 import collections
 import matplotlib.pyplot as plt
-
+import wandb
 
 from model import Model
 from torchvision.datasets import Cityscapes
@@ -13,14 +13,17 @@ from argparse import ArgumentParser
 from torch import nn
 from torchvision.transforms import v2
 
+from helpers import *
+
 
 
 
 def get_arg_parser():
     parser = ArgumentParser()
     parser.add_argument("--data_path", type=str, default="./Datasets/CityScapes", help="Path to the data")
-    parser.add_argument("--epochs",type = int, default = 1, help = "Amount of epochs for training")
-    parser.add_argument("--batch_size",type = int, default = 1, help = "Batch size for training")
+    parser.add_argument("--epochs",type = int, default = 10, help = "Amount of epochs for training")
+    parser.add_argument("--batch_size",type = int, default = 64, help = "Batch size for training")
+    parser.add_argument("--resizing_factor" ,type = int, default = 1, help = "Resizing factor for the size of the images, makes training on cpu faster for testing purposes")
     """add more arguments here and change the default values to your needs in the run_container.sh file"""
     return parser
 
@@ -28,40 +31,55 @@ def get_arg_parser():
 def main(args):
     """define your model, trainingsloop optimitzer etc. here"""
 
+    learning_rate = 0.0005
+    wandb.init(
+        project = '5SLM0 first test',
+
+        config = {
+            'learning rate':learning_rate,
+            'architecture': 'CNN',
+            'dataset': 'Cityscapes',
+            'epochs': args.epochs,
+        }
+    )
     # data loading
-    transforms = v2.Compose([v2.Resize((1024,2048)),v2.ToImage(),v2.ToDtype(torch.float32,scale = True),v2.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])])
-    target_transforms = v2.Compose([v2.Resize((1024,2048)),v2.ToImage(),v2.ToDtype(torch.float32,scale = True)])
+    transforms = v2.Compose([v2.Resize((1024//args.resizing_factor,2048//args.resizing_factor)),v2.ToImage(),v2.ToDtype(torch.float32,scale = True),v2.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])])
+    target_transforms = v2.Compose([v2.Resize((1024//args.resizing_factor,2048//args.resizing_factor)),v2.ToImage()])
     dataset = Cityscapes(args.data_path, split='train', mode='fine', target_type='semantic',transform = transforms,target_transform=target_transforms)
+
+    indices_train = range(0,int(0.01*len(dataset)))
+    indices_val = range(int(0.99*len(dataset)),len(dataset))
+    trainset = torch.utils.data.Subset(dataset,indices_train)
+    valset = torch.utils.data.Subset(dataset,indices_val)
 
     # train_data = dataset[:int(len(dataset)*0.9)]
     # val_data = dataset[int(len(dataset)*0.9):]
-    trainloader = torch.utils.data.DataLoader(dataset,batch_size = args.batch_size,shuffle = True)
+
+    trainloader = torch.utils.data.DataLoader(trainset,batch_size = args.batch_size,shuffle = True)
+    valloader = torch.utils.data.DataLoader(valset,batch_size = args.batch_size,shuffle = True)
 
     # visualize example images
-    sample = dataset[0]
-    img, target = sample
-    plt.imshow(img[0,:,:])
-    plt.show()
-    plt.imshow(target[0,:,:])
-    plt.show()
-    print(f"{type(img) = } \n {type(target) = }")
-    print(f"{torch.Tensor.size(img) = }\n {torch.Tensor.size(target) = }")
+    # sample = dataset[0]
+    # img,target_sample = sample
+    # print(target_sample[0,:,:])
 
+    
     # define model
-    model = Model()#.cuda()
+    model = Model().cuda()
 
     # define optimizer and loss function (don't forget to ignore class index 255)
     criterion = nn.CrossEntropyLoss(ignore_index=255)
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.0001, momentum=0.9)
+    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9)
     epoch_data = collections.defaultdict(list)
     # training/validation loop
     for epoch in range(args.epochs):
         running_loss = 0.0
-        for batch_idx, (data,labels) in enumerate(trainloader):
-            data = data.view(args.batch_size,-1,1024,2048)#.cuda()
-            labels = labels.view(args.batch_size,-1,1024,2048)#.cuda()
+        for batch_idx, (data,target) in enumerate(trainloader):
+            data = data.cuda()
+            target = target.cuda()
             output = model.forward(data)
-            loss = criterion(output,labels.long().squeeze()) 
+            loss = criterion(output,target.long().squeeze(dim = 1)) 
+
 
             optimizer.zero_grad()
 
@@ -69,16 +87,22 @@ def main(args):
             optimizer.step()
 
             running_loss += loss.item()
-            if batch_idx == 1:
-                print('im training')
-        epoch_data['loss'].append(running_loss/len(trainloader))
-  
-    # save model
-    torch.save(model,'/home/testmodel.pt')
+        epoch_loss = running_loss/len(trainloader)
+        epoch_data['loss'].append(epoch_loss)
+        
+        running_loss = 0
+        for batch_idx, (data,target) in enumerate(valloader):
+            data = data.cuda()
+            target = target.cuda()
+            output = model.forward(data)
+            running_loss += criterion(output,target.long().squeeze(dim = 1))
 
-    # visualize some results
+        validation_loss = running_loss/len(valloader)
+        epoch_data['validation_loss'].append(validation_loss)
+        # print("Epoch {}/{}, Loss = {:6f}".format(epoch,args.epochs,running_loss/len(trainloader)))
+        wandb.log({'loss': epoch_loss, 'val_loss': validation_loss})
 
-    pass
+    # torch.save(model,'fifth_model.pt')
 
 
 if __name__ == "__main__":
