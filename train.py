@@ -21,7 +21,7 @@ from helpers import *
 def get_arg_parser():
     parser = ArgumentParser()
     parser.add_argument("--data_path", type=str, default="./Datasets/CityScapes", help="Path to the data")
-    parser.add_argument("--epochs",type = int, default = 100, help = "Amount of epochs for training")
+    parser.add_argument("--epochs",type = int, default = 10, help = "Amount of epochs for training")
     parser.add_argument("--batch_size",type = int, default = 16, help = "Batch size for training")
     parser.add_argument("--resizing_factor" ,type = int, default = 1, help = "Resizing factor for the size of the images, makes training on cpu faster for testing purposes")
     """add more arguments here and change the default values to your needs in the run_container.sh file"""
@@ -52,8 +52,7 @@ def main(args):
     trainset = torch.utils.data.Subset(dataset,indices_train)
     valset = torch.utils.data.Subset(dataset,indices_val)
 
-    # train_data = dataset[:int(len(dataset)*0.9)]
-    # val_data = dataset[int(len(dataset)*0.9):]
+
 
     trainloader = torch.utils.data.DataLoader(trainset,batch_size = args.batch_size,shuffle = True)
     valloader = torch.utils.data.DataLoader(valset,batch_size = args.batch_size,shuffle = True)
@@ -99,7 +98,7 @@ def main(args):
 
         validation_loss = running_loss/len(valloader)
         epoch_data['validation_loss'].append(validation_loss)
-        # print("Epoch {}/{}, Loss = {:6f}".format(epoch,args.epochs,running_loss/len(trainloader)))
+        print("Epoch {}/{}, Loss = {:6f}, Validation loss = {:6f}".format(epoch,args.epochs,epoch_loss,validation_loss))
         wandb.log({'loss': epoch_loss, 'val_loss': validation_loss})
 
     torch.save(model,'snellius_model.pt')
