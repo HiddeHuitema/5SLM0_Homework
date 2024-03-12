@@ -96,12 +96,12 @@ def visualize_segmentation(model, dataloader, num_examples=5):
 
                 plt.subplot(1, 3, 2)
                 plt.imshow(mask_rgb)
-                plt.title(f'Ground Truth Mask Classes:\n {classes_gt}')
+                plt.title('Ground Truth')
                 plt.axis('off')
 
                 plt.subplot(1, 3, 3)
                 plt.imshow(pred_mask_rgb)
-                plt.title(f'Predicted Mask Predicted Classes:\n {classes_pred}')
+                plt.title('Predicted Mask ')
                 plt.axis('off')
 
                 plt.show()
@@ -158,7 +158,7 @@ colors = {
         30: (255,20,147),
         31: (219, 219, 141),
         32: (199,59,0),
-        255: (0, 0, 0)
+        33: (0, 0, 0)
 }
 
 class_names = [
