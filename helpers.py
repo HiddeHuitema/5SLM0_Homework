@@ -9,6 +9,28 @@ from argparse import ArgumentParser
 from torch import nn
 from torchvision.transforms import v2
 
+class diceloss(nn.Module):
+    def __init__(self, num_classes = 20):
+        super().__init__()
+        self.num_classes = num_classes
+
+    def forward(self, output, targets):
+        probabilities = nn.Softmax(dim = 1)(output)
+        targets_one_hot = torch.nn.functional.one_hot(targets,self.num_classes)
+        # print(targets_one_hot.shape)
+        targets_one_hot = targets_one_hot.permute(0, 3, 1, 2)
+        # print(targets_one_hot.shape)
+
+        intersection = (targets_one_hot * probabilities).sum()
+
+
+        mod_a = intersection.sum()
+        mod_b = targets.numel()
+
+        dice_coefficient = 2. * intersection / (mod_a + mod_b + 1e-6)
+        dice_loss = -dice_coefficient.log()
+        return dice_loss
+
 
 def mask_to_rgb(mask, class_to_color):
     """
