@@ -26,6 +26,7 @@ def get_arg_parser():
     parser.add_argument("--epochs",type = int, default = 20, help = "Amount of epochs for training")
     parser.add_argument("--batch_size",type = int, default = 40, help = "Batch size for training")
     parser.add_argument("--resizing_factor" ,type = int, default = 16, help = "Resizing factor for the size of the images, makes training on cpu faster for testing purposes")
+    parser.add_argument("--n_workers", type = int, default = 1, help = "Number of workers for dataloading" )
     """add more arguments here and change the default values to your needs in the run_container.sh file"""
     return parser
 
@@ -33,7 +34,7 @@ def get_arg_parser():
 def main(args):
     """define your model, trainingsloop optimitzer etc. here"""
 
-    learning_rate = 0.0005
+    learning_rate = 0.001
     wandb.init(
         project = '5SLM0 first test',
 
@@ -55,14 +56,15 @@ def main(args):
     trainset = torch.utils.data.Subset(dataset,indices_train)
     valset = torch.utils.data.Subset(dataset,indices_val)
 
-    trainloader = torch.utils.data.DataLoader(trainset,batch_size = args.batch_size,shuffle = True,num_workers = 8)
-    valloader = torch.utils.data.DataLoader(valset,batch_size = args.batch_size,shuffle = True,num_workers = 8)
+    trainloader = torch.utils.data.DataLoader(trainset,batch_size = args.batch_size,shuffle = True,num_workers = args.n_workers)
+    valloader = torch.utils.data.DataLoader(valset,batch_size = args.batch_size,shuffle = True,num_workers = args.n_workers)
 
 
     model = Model().cuda()
 
     # define optimizer and loss function (don't forget to ignore class index 255)
-    criterion = nn.CrossEntropyLoss(ignore_index=255)
+    # criterion = nn.CrossEntropyLoss(ignore_index=255)
+    criterion = diceloss()
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9)
     epoch_data = collections.defaultdict(list)
     # training/validation loop
@@ -73,6 +75,7 @@ def main(args):
             target = (target).squeeze(dim = 1).long()
             target = utils.map_id_to_train_id(target).cuda()
             output = model.forward(data)
+            # print(target.unique())
 
             loss = criterion(output,target) 
 
@@ -95,6 +98,8 @@ def main(args):
             data = data.cuda()
             target = (target).long().squeeze(dim = 1)
             target = utils.map_id_to_train_id(target).cuda()
+            
+
             output = model.forward(data)
             running_loss += criterion(output,target).item()
 
@@ -106,7 +111,7 @@ def main(args):
         print("Epoch {}/{}, Loss = {:6f}, Validation loss = {:6f}".format(epoch,args.epochs,epoch_loss,validation_loss))
         wandb.log({'loss': epoch_loss, 'val_loss': validation_loss})
 
-    torch.save(model.state_dict(),'snellius_model.pth')
+    torch.save(model.state_dict(),'8th_model.pth')
 
 
 if __name__ == "__main__":
