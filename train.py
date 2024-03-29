@@ -61,7 +61,7 @@ def main(args):
 
 
     model = Model().cuda()
-    model.load_state_dict(torch.load('models/1th_model_highdef.pth'))
+    model.load_state_dict(torch.load('1th_model_highdef.pth'))
 
     # define optimizer and loss function (don't forget to ignore class index 255)
     criterion = nn.CrossEntropyLoss(ignore_index=255)
