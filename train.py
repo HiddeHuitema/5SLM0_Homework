@@ -34,7 +34,7 @@ def get_arg_parser():
 def main(args):
     """define your model, trainingsloop optimitzer etc. here"""
 
-    learning_rate = 0.001
+    learning_rate = 0.0005
     wandb.init(
         project = '5SLM0 first test',
 
@@ -61,7 +61,7 @@ def main(args):
 
 
     model = Model().cuda()
-    model.load_state_dict(torch.load('2th_model_highdef_19classes.pth'))
+    model.load_state_dict(torch.load('3th_model_highdef_19classes.pth'))
 
     # define optimizer and loss function (don't forget to ignore class index 255)
     criterion = nn.CrossEntropyLoss(ignore_index=255)
