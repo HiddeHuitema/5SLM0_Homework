@@ -24,7 +24,7 @@ def get_arg_parser():
     parser = ArgumentParser()
     parser.add_argument("--data_path", type=str, default="./Datasets/CityScapes", help="Path to the data")
     parser.add_argument("--epochs",type = int, default = 2, help = "Amount of epochs for training")
-    parser.add_argument("--batch_size",type = int, default = 10, help = "Batch size for training")
+    parser.add_argument("--batch_size",type = int, default = 50, help = "Batch size for training")
     parser.add_argument("--resizing_factor" ,type = int, default = 16, help = "Resizing factor for the size of the images, makes training on cpu faster for testing purposes")
     parser.add_argument("--n_workers", type = int, default = 1, help = "Number of workers for dataloading" )
     """add more arguments here and change the default values to your needs in the run_container.sh file"""
@@ -61,7 +61,7 @@ def main(args):
 
 
     model = Model().cuda()
-    # model.load_state_dict(torch.load('models/24th_model.pth'))
+    model.load_state_dict(torch.load('models/1th_model_highdef.pth'))
 
     # define optimizer and loss function (don't forget to ignore class index 255)
     criterion = nn.CrossEntropyLoss(ignore_index=255)
