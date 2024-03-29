@@ -23,8 +23,8 @@ from helpers import *
 def get_arg_parser():
     parser = ArgumentParser()
     parser.add_argument("--data_path", type=str, default="./Datasets/CityScapes", help="Path to the data")
-    parser.add_argument("--epochs",type = int, default = 20, help = "Amount of epochs for training")
-    parser.add_argument("--batch_size",type = int, default = 40, help = "Batch size for training")
+    parser.add_argument("--epochs",type = int, default = 2, help = "Amount of epochs for training")
+    parser.add_argument("--batch_size",type = int, default = 10, help = "Batch size for training")
     parser.add_argument("--resizing_factor" ,type = int, default = 16, help = "Resizing factor for the size of the images, makes training on cpu faster for testing purposes")
     parser.add_argument("--n_workers", type = int, default = 1, help = "Number of workers for dataloading" )
     """add more arguments here and change the default values to your needs in the run_container.sh file"""
@@ -46,7 +46,7 @@ def main(args):
         }
     )
     # data loading
-    transforms = v2.Compose([v2.Resize((1024//args.resizing_factor,2048//args.resizing_factor)),v2.ToImage(),v2.ToDtype(torch.float32),v2.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])])
+    transforms = v2.Compose([v2.Resize((1024//args.resizing_factor,2048//args.resizing_factor)),v2.ToImage(),v2.ToDtype(torch.float32,scale = True),v2.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])])
     target_transforms = v2.Compose([v2.Resize((1024//args.resizing_factor,2048//args.resizing_factor)),v2.ToImage()])
 
     dataset = Cityscapes(args.data_path, split='train', mode='fine', target_type='semantic',transform = transforms,target_transform=target_transforms)
@@ -61,20 +61,23 @@ def main(args):
 
 
     model = Model().cuda()
+    # model.load_state_dict(torch.load('models/24th_model.pth'))
 
     # define optimizer and loss function (don't forget to ignore class index 255)
-    # criterion = nn.CrossEntropyLoss(ignore_index=255)
-    criterion = diceloss()
+    criterion = nn.CrossEntropyLoss(ignore_index=255)
+    # criterion = diceloss()
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9)
     epoch_data = collections.defaultdict(list)
     # training/validation loop
     for epoch in range(args.epochs):
         running_loss = 0.0
+        model.train()
         for batch_idx, (data,target) in enumerate(trainloader):
             data = data.cuda()
             target = (target).squeeze(dim = 1).long()
             target = utils.map_id_to_train_id(target).cuda()
-            output = model.forward(data)
+            target_softmax = target
+            output = model.forward(data).softmax(dim = 1)
             # print(target.unique())
 
             loss = criterion(output,target) 
@@ -100,18 +103,21 @@ def main(args):
             target = utils.map_id_to_train_id(target).cuda()
             
 
-            output = model.forward(data)
+            output = model.forward(data).softmax(dim = 1)
             running_loss += criterion(output,target).item()
 
             del data, target, output
             torch.cuda.empty_cache()
+        # if epoch >= 2:
+        #     if abs(epoch_data['loss'][epoch]-epoch_data['loss'][epoch-1]) <= 0.01:
+        #         break
 
         validation_loss = running_loss/len(valloader)
         epoch_data['validation_loss'].append(validation_loss)
         print("Epoch {}/{}, Loss = {:6f}, Validation loss = {:6f}".format(epoch,args.epochs,epoch_loss,validation_loss))
         wandb.log({'loss': epoch_loss, 'val_loss': validation_loss})
 
-    torch.save(model.state_dict(),'8th_model.pth')
+    torch.save(model.state_dict(),'10th_model.pth')
 
 
 if __name__ == "__main__":
