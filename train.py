@@ -35,16 +35,16 @@ def main(args):
     """define your model, trainingsloop optimitzer etc. here"""
 
     learning_rate = 0.001
-    # wandb.init(
-    #     project = '5SLM0 first test',
+    wandb.init(
+        project = '5SLM0 first test',
 
-    #     config = {
-    #         'learning rate':learning_rate,
-    #         'architecture': 'CNN',
-    #         'dataset': 'Cityscapes',
-    #         'epochs': args.epochs,
-    #     }
-    # )
+        config = {
+            'learning rate':learning_rate,
+            'architecture': 'CNN',
+            'dataset': 'Cityscapes',
+            'epochs': args.epochs,
+        }
+    )
     # data loading
     transforms = v2.Compose([v2.Resize((1024//args.resizing_factor,2048//args.resizing_factor)),v2.ToImage(),v2.ToDtype(torch.float32,scale = True),v2.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])])
     target_transforms = v2.Compose([v2.Resize((1024//args.resizing_factor,2048//args.resizing_factor)),v2.ToImage()])
