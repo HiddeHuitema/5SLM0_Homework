@@ -13,17 +13,17 @@ class Model(nn.Module):
         self.e2 = encoder_block(64, 128)
         self.e3 = encoder_block(128, 256)
         self.e4 = encoder_block(256, 512)
-        self.e5 = encoder_block(512,1024)
-        self.e6 = encoder_block(1024,1536)
+        self.e5 = encoder_block(512,512)
+        self.e6 = encoder_block(512,512)
 
 
         """ Bottleneck """
-        self.b = conv_block(1536, 2048)
+        self.b = conv_block(512, 1024)
 
         """ Decoder """
-        self.d1 = decoder_block(2048, 1536)
-        self.d2 = decoder_block(1536,1024)
-        self.d3 = decoder_block(1024,512)
+        self.d1 = decoder_block(1024, 512)
+        self.d2 = decoder_block(512,512)
+        self.d3 = decoder_block(512,512)
         self.d4 = decoder_block(512, 256)
         self.d5 = decoder_block(256, 128)
         self.d6 = decoder_block(128, 64)
