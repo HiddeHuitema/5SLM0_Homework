@@ -61,8 +61,8 @@ def main(args):
 
 
     model = Model().cuda()
-    model.load_state_dict(torch.load('3th_model_highdef_19classes.pth'))
-
+    model.load_state_dict(torch.load('27th_model.pth'))
+    # print('model loaded')
     # define optimizer and loss function (don't forget to ignore class index 255)
     criterion = nn.CrossEntropyLoss(ignore_index=255)
     # criterion = diceloss()
@@ -87,8 +87,8 @@ def main(args):
 
             loss.backward()
             optimizer.step()
-            del data, target, output
-            torch.cuda.empty_cache()
+            # del data, target, output
+            # torch.cuda.empty_cache()
             running_loss += loss.item()
             # print(loss)
         epoch_loss = running_loss/len(trainloader)
@@ -106,8 +106,8 @@ def main(args):
             output = model.forward(data).softmax(dim = 1)
             running_loss += criterion(output,target).item()
 
-            del data, target, output
-            torch.cuda.empty_cache()
+            # del data, target, output
+            # torch.cuda.empty_cache()
         # if epoch >= 2:
         #     if abs(epoch_data['loss'][epoch]-epoch_data['loss'][epoch-1]) <= 0.01:
         #         break
@@ -117,7 +117,7 @@ def main(args):
         print("Epoch {}/{}, Loss = {:6f}, Validation loss = {:6f}".format(epoch,args.epochs,epoch_loss,validation_loss))
         wandb.log({'loss': epoch_loss, 'val_loss': validation_loss})
 
-    torch.save(model.state_dict(),'10th_model.pth')
+    torch.save(model.state_dict(),'28th_model.pth')
 
 
 if __name__ == "__main__":
