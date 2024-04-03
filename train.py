@@ -34,7 +34,7 @@ def get_arg_parser():
 def main(args):
     """define your model, trainingsloop optimitzer etc. here"""
 
-    learning_rate = 0.0005
+    learning_rate = 0.001
     wandb.init(
         project = '5SLM0 first test',
 
@@ -51,8 +51,8 @@ def main(args):
 
     dataset = Cityscapes(args.data_path, split='train', mode='fine', target_type='semantic',transform = transforms,target_transform=target_transforms)
 
-    indices_train = range(0,int(0.9*len(dataset)))
-    indices_val = range(int(0.9*len(dataset)),len(dataset))
+    indices_train = range(0,int(0.01*len(dataset)))
+    indices_val = range(int(0.99*len(dataset)),len(dataset))
     trainset = torch.utils.data.Subset(dataset,indices_train)
     valset = torch.utils.data.Subset(dataset,indices_val)
 
@@ -62,10 +62,10 @@ def main(args):
 
     model = Model().cuda()
     model.load_state_dict(torch.load('33th_model.pth'))
-    # torch.save(model.state_dict(),'./models/29th_model.pth')
-    # print('model saved')
     # define optimizer and loss function (don't forget to ignore class index 255)
-    criterion = nn.CrossEntropyLoss(ignore_index=255)
+    weights = [0.1, 1.0, 0.1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    class_weights = torch.FloatTensor(weights).cuda()
+    criterion = nn.CrossEntropyLoss(weight = class_weights, ignore_index=255)
     # criterion = diceloss()
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9)
     epoch_data = collections.defaultdict(list)
@@ -118,7 +118,7 @@ def main(args):
         print("Epoch {}/{}, Loss = {:6f}, Validation loss = {:6f}".format(epoch,args.epochs,epoch_loss,validation_loss))
         wandb.log({'loss': epoch_loss, 'val_loss': validation_loss})
 
-    torch.save(model.state_dict(),'33th_model.pth')
+    torch.save(model.state_dict(),'34th_model.pth')
 
 
 if __name__ == "__main__":
