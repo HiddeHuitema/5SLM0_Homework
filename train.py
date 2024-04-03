@@ -23,7 +23,7 @@ from helpers import *
 def get_arg_parser():
     parser = ArgumentParser()
     parser.add_argument("--data_path", type=str, default="./Datasets/CityScapes", help="Path to the data")
-    parser.add_argument("--epochs",type = int, default = 30, help = "Amount of epochs for training")
+    parser.add_argument("--epochs",type = int, default = 50, help = "Amount of epochs for training")
     parser.add_argument("--batch_size",type = int, default = 50, help = "Batch size for training")
     parser.add_argument("--resizing_factor" ,type = int, default = 16, help = "Resizing factor for the size of the images, makes training on cpu faster for testing purposes")
     parser.add_argument("--n_workers", type = int, default = 1, help = "Number of workers for dataloading" )
@@ -34,7 +34,7 @@ def get_arg_parser():
 def main(args):
     """define your model, trainingsloop optimitzer etc. here"""
 
-    learning_rate = 0.0005
+    learning_rate = 0.001
     wandb.init(
         project = '5SLM0 first test',
 
@@ -61,7 +61,7 @@ def main(args):
 
 
     model = Model().cuda()
-    model.load_state_dict(torch.load('31th_model.pth'))
+    # model.load_state_dict(torch.load('32th_model.pth'))
     # torch.save(model.state_dict(),'./models/29th_model.pth')
     # print('model saved')
     # define optimizer and loss function (don't forget to ignore class index 255)
@@ -118,7 +118,7 @@ def main(args):
         print("Epoch {}/{}, Loss = {:6f}, Validation loss = {:6f}".format(epoch,args.epochs,epoch_loss,validation_loss))
         wandb.log({'loss': epoch_loss, 'val_loss': validation_loss})
 
-    torch.save(model.state_dict(),'32th_model.pth')
+    torch.save(model.state_dict(),'33th_model.pth')
 
 
 if __name__ == "__main__":
