@@ -61,7 +61,7 @@ def main(args):
 
 
     model = Model().cuda()
-    model.load_state_dict(torch.load('model_noise.pth'))
+    model.load_state_dict(torch.load('model_noise2.pth'))
     # define optimizer and loss function (don't forget to ignore class index 255)
     weights = [1, 1, 2, 2,2,2,2,2,1,1,1,2,2,1,1,1,1,1,1]
     class_weights = torch.FloatTensor(weights).cuda()
@@ -118,7 +118,7 @@ def main(args):
         print("Epoch {}/{}, Loss = {:6f}, Validation loss = {:6f}".format(epoch,args.epochs,epoch_loss,validation_loss))
         wandb.log({'loss': epoch_loss, 'val_loss': validation_loss})
 
-    torch.save(model.state_dict(),'model_noise2.pth')
+    torch.save(model.state_dict(),'model_noise3.pth')
 
 
 if __name__ == "__main__":
