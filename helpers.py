@@ -1,12 +1,13 @@
 import torch
 # import collections
 # import matplotlib.pyplot as plt
-# import numpy as np
+import numpy as np
+from torch.autograd import Variable
 
 # from model import Model
 # from torchvision.datasets import Cityscapes
 # from argparse import ArgumentParser
-# from torch import nn
+from torch import nn
 # from torchvision.transforms import v2
 
 # class diceloss(nn.Module):
@@ -191,7 +192,52 @@ import torch
 #     'ground', 'dynamic','static','.','.','.','.','.','.','.','.','.','.','.','.','.','.'
 # ]
 
+class BlendGradient(object):
+    def __init__(self,alpha):
+        self.alpha = alpha
 
+    def __call__(self,tensor):
+        gradients = self.gradient_batch(tensor)
+        blended = self.blend_images(tensor,gradients)
+        print(blended.shape)
+        return blended.squeeze(0)
+
+
+
+    def gradient_batch(self,batch):
+        batch = batch.unsqueeze(0)
+        ten=torch.unbind(batch,dim = 1)
+        # separate rbg channels
+        r = ten[0].unsqueeze(0).permute(1,0,2,3)#
+        g = ten[1].unsqueeze(0).permute(1,0,2,3)#.unsqueeze(0)
+        b = ten[2].unsqueeze(0).permute(1,0,2,3)#.unsqueeze(0)
+
+        convx =np.array([[1, 0, -1],[2,0,-2],[1,0,-1]])
+        conv1=nn.Conv2d(1, 1, kernel_size=3, stride=1, padding=1, bias=False)
+        conv1.weight=nn.Parameter(torch.from_numpy(convx).float().unsqueeze(0).unsqueeze(0))
+        G_x_r=conv1(Variable(r)).data.view(-1,1,r.shape[2],r.shape[3])
+        G_x_g=conv1(Variable(g)).data.view(-1,1,g.shape[2],g.shape[3])
+        G_x_b=conv1(Variable(b)).data.view(-1,1,b.shape[2],b.shape[3])
+        
+
+        convy=np.array([[1, 2, 1],[0,0,0],[-1,-2,-1]])
+        conv2=nn.Conv2d(1, 1, kernel_size=3, stride=1, padding=1, bias=False)
+        conv2.weight=nn.Parameter(torch.from_numpy(convy).float().unsqueeze(0).unsqueeze(0))
+        G_y_r=conv2(Variable(r)).data.view(-1,1,r.shape[2],r.shape[3])
+        G_y_g=conv2(Variable(g)).data.view(-1,1,g.shape[2],g.shape[3])
+        G_y_b=conv2(Variable(b)).data.view(-1,1,b.shape[2],b.shape[3])
+
+        G_r = torch.sqrt(torch.pow(G_x_r,2)+ torch.pow(G_y_r,2))
+        G_g = torch.sqrt(torch.pow(G_x_g,2)+ torch.pow(G_y_g,2))
+        G_b = torch.sqrt(torch.pow(G_x_b,2)+ torch.pow(G_y_b,2))
+        return (G_r+G_g+G_b)/3
+    
+
+    def blend_images(self,img,edge):
+        edge = edge.repeat(1,3,1,1)
+        blend = (self.alpha)*img + (1-self.alpha)*edge
+        return blend
+    
 
 # Creating a new transformer that can be used to add noise to the images
 class AddGaussianNoise(object):

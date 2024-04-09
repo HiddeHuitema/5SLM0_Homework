@@ -46,7 +46,7 @@ def main(args):
         }
     )
     # data loading
-    transforms = v2.Compose([v2.Resize((1024//args.resizing_factor,2048//args.resizing_factor)),v2.ToImage(),v2.ToDtype(torch.float32,scale = True),v2.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225]),AddGaussianNoise(0.2,0.3)])
+    transforms = v2.Compose([v2.Resize((1024//args.resizing_factor,2048//args.resizing_factor)),v2.ToImage(),v2.ToDtype(torch.float32,scale = True),v2.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225]),BlendGradient(alpha = 0.6)])
     target_transforms = v2.Compose([v2.Resize((1024//args.resizing_factor,2048//args.resizing_factor)),v2.ToImage()])
 
     dataset = Cityscapes(args.data_path, split='train', mode='fine', target_type='semantic',transform = transforms,target_transform=target_transforms)
@@ -61,9 +61,9 @@ def main(args):
 
 
     model = Model().cuda()
-    model.load_state_dict(torch.load('model_noise2.pth'))
+    # model.load_state_dict(torch.load('model_noise2.pth'))
     # define optimizer and loss function (don't forget to ignore class index 255)
-    weights = [1, 1, 2, 2,2,2,2,2,1,1,1,2,2,1,1,1,1,1,1]
+    weights = [1, 1, 1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
     class_weights = torch.FloatTensor(weights).cuda()
     criterion = nn.CrossEntropyLoss(weight = class_weights, ignore_index=255)
     # criterion = diceloss()
