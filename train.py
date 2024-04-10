@@ -24,7 +24,7 @@ from helpers import *
 def get_arg_parser():
     parser = ArgumentParser()
     parser.add_argument("--data_path", type=str, default="./Datasets/CityScapes", help="Path to the data")
-    parser.add_argument("--epochs",type = int, default = 10, help = "Amount of epochs for training")
+    parser.add_argument("--epochs",type = int, default = 50, help = "Amount of epochs for training")
     parser.add_argument("--batch_size",type = int, default = 20, help = "Batch size for training")
     parser.add_argument("--resizing_factor" ,type = int, default = 16, help = "Resizing factor for the size of the images, makes training on cpu faster for testing purposes")
     parser.add_argument("--n_workers", type = int, default = 1, help = "Number of workers for dataloading" )
@@ -35,7 +35,7 @@ def get_arg_parser():
 def main(args):
     """define your model, trainingsloop optimitzer etc. here"""
 
-    learning_rate = 0.001
+    learning_rate = 0.01
     wandb.init(
         project = '5SLM0 first test',
 
@@ -47,13 +47,13 @@ def main(args):
         }
     )
     # data loading
-    transforms = v2.Compose([v2.Resize((1024//args.resizing_factor,2048//args.resizing_factor)),v2.ToImage(),v2.ToDtype(torch.float32,scale = True),v2.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225]),BlendGradient(alpha = 0.6)])
+    transforms = v2.Compose([v2.Resize((1024//args.resizing_factor,2048//args.resizing_factor)),v2.ToImage(),v2.ToDtype(torch.float32,scale = True),v2.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])])
     target_transforms = v2.Compose([v2.Resize((1024//args.resizing_factor,2048//args.resizing_factor)),v2.ToImage()])
 
     dataset = Cityscapes(args.data_path, split='train', mode='fine', target_type='semantic',transform = transforms,target_transform=target_transforms)
 
-    indices_train = range(0,int(0.01*len(dataset)))
-    indices_val = range(int(0.99*len(dataset)),len(dataset))
+    indices_train = range(0,int(0.9*len(dataset)))
+    indices_val = range(int(0.9*len(dataset)),len(dataset))
     trainset = torch.utils.data.Subset(dataset,indices_train)
     valset = torch.utils.data.Subset(dataset,indices_val)
 
@@ -62,9 +62,27 @@ def main(args):
 
 
     model = Model().cuda()
-    model.load_state_dict(torch.load('model_noise2.pth'))
+    # model.load_state_dict(torch.load('model_noise2.pth'))
     # define optimizer and loss function (don't forget to ignore class index 255)
-    weights = [1, 1, 1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    weights = [[1.0],
+                [1.8088044976264959],
+                [1.1562662699888433],
+                [1.9799768118478331],
+                [1.9824706319865246],
+                [1.9748631680266007],
+                [1.9871467635027236],
+                [1.9715065736223831],
+                [1.6200170629798962],
+                [1.9714698225887604],
+                [1.9277544680944152],
+                [1.947933410627174],
+                [1.9944619692428849],
+                [1.8546759127600463],
+                [1.9997051167064073],
+                [1.9859173539255792],
+                [2.0],
+                [1.9990645986918383],
+                [1.9934443156213768]]
     class_weights = torch.FloatTensor(weights).cuda()
     criterion = nn.CrossEntropyLoss(weight = class_weights, ignore_index=255)
     
@@ -105,7 +123,7 @@ def main(args):
             target = utils.map_id_to_train_id(target).cuda()
             
 
-            output = model.forward(data).softmax(dim = 1)
+            output = model.forward(data)
             running_loss += criterion(output,target).item()
 
             # del data, target, output
@@ -114,10 +132,10 @@ def main(args):
         scheduler.step()
         validation_loss = running_loss/len(valloader)
         epoch_data['validation_loss'].append(validation_loss)
-        print("Epoch {}/{}, Loss = {:6f}, Validation loss = {:6f}".format(epoch,args.epochs,epoch_loss,validation_loss))
+        print("Epoch {}/{}, Loss = {:6f}, Validation loss = {:6f},lr = {:6f}".format(epoch,args.epochs,epoch_loss,validation_loss,optimizer.param_groups[0]['lr']))
         wandb.log({'loss': epoch_loss, 'val_loss': validation_loss})
 
-    torch.save(model.state_dict(),'model_noise3.pth')
+    torch.save(model.state_dict(),'model_baseline2.pth')
 
 
 if __name__ == "__main__":
