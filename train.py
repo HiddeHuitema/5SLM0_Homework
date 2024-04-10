@@ -13,7 +13,8 @@ from torchvision.datasets import Cityscapes
 from argparse import ArgumentParser
 from torch import nn
 from torchvision.transforms import v2
-import torchvision.transforms as transforms
+# import torchvision.transforms as transforms
+from torch.optim.lr_scheduler import ExponentialLR
 
 from helpers import *
 
@@ -51,8 +52,8 @@ def main(args):
 
     dataset = Cityscapes(args.data_path, split='train', mode='fine', target_type='semantic',transform = transforms,target_transform=target_transforms)
 
-    indices_train = range(0,int(0.9*len(dataset)))
-    indices_val = range(int(0.9*len(dataset)),len(dataset))
+    indices_train = range(0,int(0.01*len(dataset)))
+    indices_val = range(int(0.99*len(dataset)),len(dataset))
     trainset = torch.utils.data.Subset(dataset,indices_train)
     valset = torch.utils.data.Subset(dataset,indices_val)
 
@@ -61,13 +62,15 @@ def main(args):
 
 
     model = Model().cuda()
-    # model.load_state_dict(torch.load('model_noise2.pth'))
+    model.load_state_dict(torch.load('model_noise2.pth'))
     # define optimizer and loss function (don't forget to ignore class index 255)
     weights = [1, 1, 1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
     class_weights = torch.FloatTensor(weights).cuda()
     criterion = nn.CrossEntropyLoss(weight = class_weights, ignore_index=255)
-    # criterion = diceloss()
+    
+
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9)
+    scheduler = ExponentialLR(optimizer,gamma = 0.9)
     epoch_data = collections.defaultdict(list)
     # training/validation loop
     for epoch in range(args.epochs):
@@ -77,9 +80,8 @@ def main(args):
             data = data.cuda()
             target = (target).squeeze(dim = 1).long()
             target = utils.map_id_to_train_id(target).cuda()
-            target_softmax = target
-            output = model.forward(data).softmax(dim = 1)
-            # print(target.unique())
+            output = model.forward(data)
+        
 
             loss = criterion(output,target) 
 
@@ -88,8 +90,7 @@ def main(args):
 
             loss.backward()
             optimizer.step()
-            # del data, target, output
-            # torch.cuda.empty_cache()
+
             running_loss += loss.item()
             # print(loss)
         epoch_loss = running_loss/len(trainloader)
@@ -109,10 +110,8 @@ def main(args):
 
             # del data, target, output
             # torch.cuda.empty_cache()
-        # if epoch >= 2:
-        #     if abs(epoch_data['loss'][epoch]-epoch_data['loss'][epoch-1]) <= 0.01:
-        #         break
 
+        scheduler.step()
         validation_loss = running_loss/len(valloader)
         epoch_data['validation_loss'].append(validation_loss)
         print("Epoch {}/{}, Loss = {:6f}, Validation loss = {:6f}".format(epoch,args.epochs,epoch_loss,validation_loss))

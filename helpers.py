@@ -199,7 +199,6 @@ class BlendGradient(object):
     def __call__(self,tensor):
         gradients = self.gradient_batch(tensor)
         blended = self.blend_images(tensor,gradients)
-        print(blended.shape)
         return blended.squeeze(0)
 
 
