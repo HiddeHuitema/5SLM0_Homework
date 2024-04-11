@@ -24,7 +24,7 @@ from helpers import *
 def get_arg_parser():
     parser = ArgumentParser()
     parser.add_argument("--data_path", type=str, default="./Datasets/CityScapes", help="Path to the data")
-    parser.add_argument("--epochs",type = int, default = 40, help = "Amount of epochs for training")
+    parser.add_argument("--epochs",type = int, default = 50, help = "Amount of epochs for training")
     parser.add_argument("--batch_size",type = int, default = 20, help = "Batch size for training")
     parser.add_argument("--resizing_factor" ,type = int, default = 16, help = "Resizing factor for the size of the images, makes training on cpu faster for testing purposes")
     parser.add_argument("--n_workers", type = int, default = 1, help = "Number of workers for dataloading" )
@@ -64,25 +64,25 @@ def main(args):
     model = Model().cuda()
     # model.load_state_dict(torch.load('model_noise2.pth'))
     # define optimizer and loss function (don't forget to ignore class index 255)
-    weights = [[1.5],
-                [1.904402248813248],
-                [1.5781331349944216],
-                [1.9899884059239166],
-                [1.9912353159932623],
-                [1.9874315840133003],
-                [1.9935733817513617],
-                [1.9857532868111916],
-                [1.8100085314899481],
-                [1.98573491129438],
-                [1.9638772340472075],
-                [1.973966705313587],
-                [1.9972309846214424],
-                [1.9273379563800233],
-                [1.9998525583532036],
-                [1.9929586769627896],
-                [2.0],
-                [1.999532299345919],
-                [1.9967221578106884]]
+    weights = [[1.0],
+               [1.404402248813248],
+               [1.0781331349944216],
+               [1.4899884059239166],
+               [1.4912353159932623],
+               [1.4874315840133003],
+               [1.4935733817513617],
+               [1.4857532868111916],
+               [1.3100085314899481],
+               [1.48573491129438],
+               [1.4638772340472075],
+               [1.473966705313587],
+               [1.4972309846214424],
+               [1.4273379563800233],
+               [1.4998525583532036],
+               [1.4929586769627896],
+               [1.5],
+               [1.499532299345919],
+               [1.4967221578106884]]
     class_weights = torch.FloatTensor(weights).cuda()
     criterion = nn.CrossEntropyLoss(weight = class_weights, ignore_index=255)
     
