@@ -52,8 +52,8 @@ def main(args):
 
     dataset = Cityscapes(args.data_path, split='train', mode='fine', target_type='semantic',transform = transforms,target_transform=target_transforms)
 
-    indices_train = range(0,int(0.01*len(dataset)))
-    indices_val = range(int(0.99*len(dataset)),len(dataset))
+    indices_train = range(0,int(0.9*len(dataset)))
+    indices_val = range(int(0.9*len(dataset)),len(dataset))
     trainset = torch.utils.data.Subset(dataset,indices_train)
     valset = torch.utils.data.Subset(dataset,indices_val)
 

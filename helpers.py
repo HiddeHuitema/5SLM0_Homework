@@ -295,7 +295,4 @@ def paintbynr(tensor,target,alpha):
     target_norm = norm_image(target)
     target_norm = target_norm.unsqueeze(1)
     target_norm = target_norm.repeat(1,3,1,1)
-    print('Target size {}'.format(target_norm.shape))
-    print('tensor size {}'.format(tensor.shape))
-    print('Alpha {}'.format(alpha))
     return alpha*tensor + (1-alpha)*target_norm
