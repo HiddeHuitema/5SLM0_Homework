@@ -24,7 +24,7 @@ from helpers import *
 def get_arg_parser():
     parser = ArgumentParser()
     parser.add_argument("--data_path", type=str, default="./Datasets/CityScapes", help="Path to the data")
-    parser.add_argument("--epochs",type = int, default = 50, help = "Amount of epochs for training")
+    parser.add_argument("--epochs",type = int, default = 40, help = "Amount of epochs for training")
     parser.add_argument("--batch_size",type = int, default = 20, help = "Batch size for training")
     parser.add_argument("--resizing_factor" ,type = int, default = 16, help = "Resizing factor for the size of the images, makes training on cpu faster for testing purposes")
     parser.add_argument("--n_workers", type = int, default = 1, help = "Number of workers for dataloading" )
@@ -52,8 +52,8 @@ def main(args):
 
     dataset = Cityscapes(args.data_path, split='train', mode='fine', target_type='semantic',transform = transforms,target_transform=target_transforms)
 
-    indices_train = range(0,int(0.9*len(dataset)))
-    indices_val = range(int(0.9*len(dataset)),len(dataset))
+    indices_train = range(0,int(0.01*len(dataset)))
+    indices_val = range(int(0.99*len(dataset)),len(dataset))
     trainset = torch.utils.data.Subset(dataset,indices_train)
     valset = torch.utils.data.Subset(dataset,indices_val)
 
@@ -64,25 +64,25 @@ def main(args):
     model = Model().cuda()
     # model.load_state_dict(torch.load('model_noise2.pth'))
     # define optimizer and loss function (don't forget to ignore class index 255)
-    weights = [[1.0],
-                [1.8088044976264959],
-                [1.1562662699888433],
-                [1.9799768118478331],
-                [1.9824706319865246],
-                [1.9748631680266007],
-                [1.9871467635027236],
-                [1.9715065736223831],
-                [1.6200170629798962],
-                [1.9714698225887604],
-                [1.9277544680944152],
-                [1.947933410627174],
-                [1.9944619692428849],
-                [1.8546759127600463],
-                [1.9997051167064073],
-                [1.9859173539255792],
+    weights = [[1.5],
+                [1.904402248813248],
+                [1.5781331349944216],
+                [1.9899884059239166],
+                [1.9912353159932623],
+                [1.9874315840133003],
+                [1.9935733817513617],
+                [1.9857532868111916],
+                [1.8100085314899481],
+                [1.98573491129438],
+                [1.9638772340472075],
+                [1.973966705313587],
+                [1.9972309846214424],
+                [1.9273379563800233],
+                [1.9998525583532036],
+                [1.9929586769627896],
                 [2.0],
-                [1.9990645986918383],
-                [1.9934443156213768]]
+                [1.999532299345919],
+                [1.9967221578106884]]
     class_weights = torch.FloatTensor(weights).cuda()
     criterion = nn.CrossEntropyLoss(weight = class_weights, ignore_index=255)
     
@@ -90,6 +90,9 @@ def main(args):
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9)
     scheduler = ExponentialLR(optimizer,gamma = 0.9)
     epoch_data = collections.defaultdict(list)
+
+
+    
     # training/validation loop
     for epoch in range(args.epochs):
         running_loss = 0.0
@@ -98,6 +101,8 @@ def main(args):
             data = data.cuda()
             target = (target).squeeze(dim = 1).long()
             target = utils.map_id_to_train_id(target).cuda()
+            alpha = torch.rand(1).cuda()
+            data = paintbynr(data,target,alpha)
             output = model.forward(data)
         
 
@@ -133,9 +138,9 @@ def main(args):
         validation_loss = running_loss/len(valloader)
         epoch_data['validation_loss'].append(validation_loss)
         print("Epoch {}/{}, Loss = {:6f}, Validation loss = {:6f},lr = {:6f}".format(epoch,args.epochs,epoch_loss,validation_loss,optimizer.param_groups[0]['lr']))
-        wandb.log({'loss': epoch_loss, 'val_loss': validation_loss})
+    #     wandb.log({'loss': epoch_loss, 'val_loss': validation_loss})
 
-    torch.save(model.state_dict(),'model_baseline2.pth')
+    torch.save(model.state_dict(),'model_paintbynr1.pth')
 
 
 if __name__ == "__main__":

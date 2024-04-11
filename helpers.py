@@ -282,3 +282,20 @@ class AddGaussianNoise(object):
         '''
 
         return tensor + torch.randn(tensor.size()) * self.std + self.mean  
+    
+
+def norm_image(img):
+    img_norm = (img-torch.min(img))/(torch.max(img)-torch.min(img))
+    return img_norm
+
+
+    
+
+def paintbynr(tensor,target,alpha):
+    target_norm = norm_image(target)
+    target_norm = target_norm.unsqueeze(1)
+    target_norm = target_norm.repeat(1,3,1,1)
+    print('Target size {}'.format(target_norm.shape))
+    print('tensor size {}'.format(tensor.shape))
+    print('Alpha {}'.format(alpha))
+    return alpha*tensor + (1-alpha)*target_norm
