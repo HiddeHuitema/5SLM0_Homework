@@ -90,7 +90,7 @@ def main(args):
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9)
     scheduler = ExponentialLR(optimizer,gamma = 0.9)
     epoch_data = collections.defaultdict(list)
-
+    gradientblending =BlendGradient([0.3,1])
 
     
     # training/validation loop
@@ -101,8 +101,8 @@ def main(args):
             data = data.cuda()
             target = (target).squeeze(dim = 1).long()
             target = utils.map_id_to_train_id(target).cuda()
-            alpha = torch.rand(1).cuda()
-            data = paintbynr(data,target,alpha)
+            # alpha = torch.rand(1).cuda()
+            data = gradientblending.forward(data)
             output = model.forward(data)
         
 
@@ -140,7 +140,7 @@ def main(args):
         print("Epoch {}/{}, Loss = {:6f}, Validation loss = {:6f},lr = {:6f}".format(epoch,args.epochs,epoch_loss,validation_loss,optimizer.param_groups[0]['lr']))
         wandb.log({'loss': epoch_loss, 'val_loss': validation_loss})
 
-    torch.save(model.state_dict(),'model_paintbynr3.pth')
+    torch.save(model.state_dict(),'model_blend5.pth')
 
 
 if __name__ == "__main__":
