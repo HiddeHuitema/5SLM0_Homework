@@ -193,8 +193,8 @@ from torch import nn
 # ]
 
 class BlendGradient(object):
-    def __init__(self,alpha):
-        self.alpha = alpha
+    def __init__(self,alpha_range):
+        self.alpha_range = alpha_range
 
     def __call__(self,tensor):
         gradients = self.gradient_batch(tensor)
@@ -234,7 +234,8 @@ class BlendGradient(object):
 
     def blend_images(self,img,edge):
         edge = edge.repeat(1,3,1,1)
-        blend = (self.alpha)*img + (1-self.alpha)*edge
+        alpha = (self.alpha_range[0]-self.alpha_range[1])*torch.randn(1)+self.alpha_range[1]
+        blend = (alpha)*img + (1-alpha)*edge
         return blend
     
 
@@ -291,8 +292,21 @@ def norm_image(img):
 
     
 
+# def paintbynr(tensor,target,alpha):
+#     target_norm = norm_image(target)
+#     target_norm = target_norm.unsqueeze(1)
+#     target_norm = target_norm.repeat(1,3,1,1)
+#     return alpha*tensor + (1-alpha)*target_norm
 def paintbynr(tensor,target,alpha):
     target_norm = norm_image(target)
     target_norm = target_norm.unsqueeze(1)
     target_norm = target_norm.repeat(1,3,1,1)
-    return alpha*tensor + (1-alpha)*target_norm
+    batch_size = tensor.shape[0]
+    split = batch_size//2
+    tensor_no_transform = tensor[:split]
+    tensor_to_transform = tensor[split:]
+    targets_for_transform = target_norm[split:]
+
+    transformed_tensor =  alpha*tensor_to_transform + (1-alpha)*targets_for_transform
+    
+    return torch.cat((tensor_no_transform,transformed_tensor),0)

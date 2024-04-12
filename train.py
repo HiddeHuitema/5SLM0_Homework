@@ -138,9 +138,9 @@ def main(args):
         validation_loss = running_loss/len(valloader)
         epoch_data['validation_loss'].append(validation_loss)
         print("Epoch {}/{}, Loss = {:6f}, Validation loss = {:6f},lr = {:6f}".format(epoch,args.epochs,epoch_loss,validation_loss,optimizer.param_groups[0]['lr']))
-    #     wandb.log({'loss': epoch_loss, 'val_loss': validation_loss})
+        wandb.log({'loss': epoch_loss, 'val_loss': validation_loss})
 
-    torch.save(model.state_dict(),'model_paintbynr1.pth')
+    torch.save(model.state_dict(),'model_paintbynr3.pth')
 
 
 if __name__ == "__main__":
