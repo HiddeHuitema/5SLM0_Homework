@@ -1,27 +1,15 @@
-# Final Assignment
+# Improving robustness of CNN by highlighting edges
+This repository contains the code that accompanies the final assignment of Hidde Huitema (1373005) for the course 5SLM0.
+The username that was used to submit models to the CodaLab (https://codalab.lisn.upsaclay.fr/competitions/17868#learn_the_details) competition is HiddeHuitema.
 
-This repository serves as the starting kit for the 5LSM0 final assignment.
-This assignment is a part of the 5LSM0 course. It involves working with the Cityscapes dataset and training a neural network. The assignment contributes to 50% of your final grade.
+In this project, it was attempted to increase the robustness of a U-net for semantic segmentation by augmenting the Data using a simple edge detector.
+
 
 ## Getting Started
+To run this code, clone the repository to your own computer and make sure you have pytorch, numpy and weights&biases installed in your environment
+The main train loop is implemented in the train.py file, you can run this code to train a new model. 
+--------.ipynb contains code for evaluating the models and creating figures. If you want to see the results of the models I trained, please send me an email so I can send the pretrained models, since they can not be pushed to github due to their size. 
 
-### Dependencies
-
-We already created a DockerContainer with all dependencies to run on Snellius, in the run_main.sh file we refer to this container. You don't have to changes anything for this.
-
-### Installing
-
-To get started with this project, you need to clone the repository to Snellius or your local machine. You can do this by running the following command in your terminal:
-
-```bash
-git clone https://github.com/5LSM0/FinalAssignment.git
-```
-
-After cloning the repository, navigate to the project directory:
-
-```bash
-cd FinalAssignment
-```
 
 ### File Descriptions
 
@@ -40,6 +28,5 @@ Here's a brief overview of the files you'll find in this repository:
 
 ### Authors
 
-- T.J.M. Jaspers
-- C.H.B. Claessens
-- C.H.J. Kusters
+- Hidde Huitema
+    h.r.huitema@student.tue.nl 
